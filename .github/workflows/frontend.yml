@@ -17,62 +17,163 @@ jobs:
   run-e2e-tests-in-zeppelin-web:
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tune Runner VM
-      uses: ./.github/actions/tune-runner-vm
-    - name: Set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 11
-    - name: Cache local Maven repository
-      uses: actions/cache@v4
-      with:
-        path: |-
-          ~/.m2/repository
-          !~/.m2/repository/org/apache/zeppelin/
-          ~/.spark-dist
-          ~/.cache
-        key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |-
-          ${{ runner.os }}-zeppelin-
-    - name: Install application
-      run: ./mvnw clean install -DskipTests -am -pl zeppelin-web -Pweb-classic -Pspark-scala-2.12
-        -Pspark-3.4 -Pweb-dist ${MAVEN_ARGS}
-    - name: Run headless test
-      run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw
-        verify -pl zeppelin-web -Pweb-classic -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist
-        -Pweb-e2e ${MAVEN_ARGS}
-    - name: Print zeppelin logs
-      run: if [ -d "logs" ]; then cat logs/*; fi
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: |-
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |-
+            ${{ runner.os }}-zeppelin-
+      - name: Install application
+        run: ./mvnw clean install -DskipTests -am -pl zeppelin-web -Pweb-classic -Pspark-scala-2.12
+          -Pspark-3.4 -Pweb-dist ${MAVEN_ARGS} "-Dfrontend-maven-plugin.node.args=-ignore-scripts"
+          "--also-make" "-Dmaven.test.skip=true" "-Dmaven.test.skip=false" "-DskipTests=false"
+          "-Dfrontend-maven-plugin.skip=true" "-Dfrontend-maven-plugin.npm.install=false"
+          "-Dfrontend-maven-plugin.npm.args=install" "--no-install-demos" "-Dfrontend-maven-plugin.installDirectory=target/npm-install"
+          "-Dfrontend-maven-plugin.skip=false" "-Dfrontend-maven-plugin.npm.installDirectory=target/npm-install"
+          "-Dfrontend-maven-plugin.npm.prune=true" "-Dnpm.prune=true" "-Dfrontend-maven-plugin.downloadSources=false"
+          "-Dfrontend-maven-plugin.npm.installDirectory=target/npm-install/node_modules"
+          "-Dfrontend-maven-plugin.npm.testSkip=true" "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es7"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es7,webdriver-js-extender/built/spec/"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations"
+          "-Dfrontend-maven-plugin.npm.install.only=bootstrap" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test"
+          "-Ddownload-sparkr-files.skip=true" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db"
+          "-Dfrontend-maven-plugin.npm.install.only=true" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022"
+          "--ignore-scripts" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect,caniuse-lite"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext/iterable,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect,caniuse-lite,mathjax/config"
+          "-Dfrontend-maven-plugin.npm.install.ignore=nvd3/examples" "-Dfrontend-maven-plugin.npm.install.ignore=es5-ext/math"
+          "-Dfrontend-maven-plugin.npm.install.ignore=angular-ui-bootstrap/src" "-Dfrontend-maven-plugin.npm.install.ignore=es5-ext/function"
+          "-Dfrontend-maven-plugin.npm.install.ignore=ace-builds/src-noconflict/snippets"
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/example" "-Dfrontend-maven-plugin.npm.install.ignore=nvd3/test"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/build" "-Dfrontend-maven-plugin.npm.install.ignore=sax/examples"
+          "-Dfrontend-maven-plugin.npm.install.ignore=stream-http/test" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect,caniuse-lite,mathjax/config"
+          "-Dfrontend-maven-plugin.npm.install.ignore=moment" "-Dfrontend-maven-plugin.npm.install.ignore=core-js/stage"
+          "-Dfrontend-maven-plugin.npm.install.ignore=bootstrap" "-Dfrontend-maven-plugin.npm.install.ignore=core-js/web"
+          "-Dfrontend-maven-plugin.npm.install.ignore=d3/src" "-Dfrontend-maven-plugin.npm.install.ignore=sax/test"
+          "-Dfrontend-maven-plugin.npm.install.ignore=angular-ui-bootstrap" "-Dfrontend-maven-plugin.npm.install.ignore=selenium-webdriver/test"
+          "-Dfrontend-maven-plugin.npm.install.ignore=lodash/internal" "-Dfrontend-maven-plugin.npm.install.ignore=webpack/web_modules"
+          "-Dfrontend-maven-plugin.npm.install.ignore=moment/min" "-Dfrontend-maven-plugin.npm.install.ignore=protractor/exampleTypescript"
+          "-Dfrontend-maven-plugin.npm.install.ignore=ng-annotate-loader" "-Dfrontend-maven-plugin.npm.install.ignore=unique-filename/coverage"
+          "-Dfrontend-maven-plugin.npm.install.ignore=jquery-ui" "-Dfrontend-maven-plugin.npm.install.ignore=core-js/fn"
+          "-Dfrontend-maven-plugin.npm.install.ignore=terser/tools" "-Dfrontend-maven-plugin.npm.install.ignore=yargs/locales"
+          "-Dfrontend-maven-plugin.npm.install.ignore=ace-builds/src-min" "-Dfrontend-maven-plugin.npm.install.ignore=es5-ext"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract/2018,lodash/collection,es5-ext,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect,caniuse-lite,mathjax/config,mathjax/localization"
+          "-Dfrontend-maven-plugin.npm.install.ignore=pako" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract,lodash/collection,es5-ext,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect,caniuse-lite,mathjax/config,mathjax/localization"
+          "-Dfrontend-maven-plugin.npm.install.ignore=angular-ui-grid" "-Dfrontend-maven-plugin.npm.install.ignore=csso"
+          "-Dfrontend-maven-plugin.npm.install.ignore=lodash/string" "-Dfrontend-maven-plugin.npm.install.ignore=ace-builds/src"
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/test" "-Dfrontend-maven-plugin.npm.install.ignore=buffer/test"
+          "-Dfrontend-maven-plugin.npm.install.ignore=es-abstract/2015" "-Dfrontend-maven-plugin.npm.install.ignore=core-js/es6"
+          "-Dfrontend-maven-plugin.npm.install.ignore=core-js/library,core-js/es7,webdriver-js-extender/built/spec,es-abstract,lodash/collection,es5-ext,jshint,es5-ext/array,es-abstract/operations,grunt-newer/test,es-abstract/2017,caniuse-db,iconv-lite/encodings,babel-runtime/core-js/regexp,perfect-scrollbar/examples,caniuse-db/fulldata-json,htmlparser2/tests,es-abstract/2022,babel-runtime/core-js/reflect,caniuse-lite,mathjax/config,mathjax/localization,mathjax/extensions"
+          "-Dfrontend-maven-plugin.npm.install.ignore=es-abstract/2021" "-Dfrontend-maven-plugin.npm.install.ignore=es5-ext/string"
+          "-Dfrontend-maven-plugin.npm.install.ignore=moment/src" "-Dfrontend-maven-plugin.npm.install.ignore=webpack/hot"
+          "-Dfrontend-maven-plugin.npm.install.ignore=es-abstract/2023" "-Dfrontend-maven-plugin.npm.install.ignore=jshint"
+          "-Dfrontend-maven-plugin.npm.install.ignore=es5-ext/reg-exp" "-Dfrontend-maven-plugin.npm.install.ignore=ajv/scripts"
+          "-Dfrontend-maven-plugin.npm.install.ignore=source-map" "-Dfrontend-maven-plugin.npm.install.ignore=es-abstract/2016"
+          "-Dfrontend-maven-plugin.npm.install.ignore=babel-runtime/core-js/math"
+      - name: Run headless test
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw
+          verify -pl zeppelin-web -Pweb-classic -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist
+          -Pweb-e2e ${MAVEN_ARGS}
+      - name: Print zeppelin logs
+        run: if [ -d "logs" ]; then cat logs/*; fi
     name: run-e2e-tests-in-zeppelin-web
   run-tests-in-zeppelin-web-angular:
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tune Runner VM
-      uses: ./.github/actions/tune-runner-vm
-    - name: Set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 11
-    - name: Cache local Maven repository
-      uses: actions/cache@v4
-      with:
-        path: |-
-          ~/.m2/repository
-          !~/.m2/repository/org/apache/zeppelin/
-          ~/.spark-dist
-          ~/.cache
-        key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |-
-          ${{ runner.os }}-zeppelin-
-    - name: Run headless test
-      run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw
-        package -pl zeppelin-web-angular ${MAVEN_ARGS}
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: |-
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |-
+            ${{ runner.os }}-zeppelin-
+      - name: Run headless test
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw
+          package -pl zeppelin-web-angular ${MAVEN_ARGS} "-Dfrontend-maven-plugin.node.install.skip=true"
+          "-DskipTests=false" "-Dfrontend-maven-plugin.npm.install.skip=true" "-Dmaven.test.skip=false"
+          "-Dfrontend-maven-plugin.npm.args=-ignore-scripts" "--also-make" "-Dfrontend-maven-plugin.npm.install.directory=/tmp"
+          "-Dfrontend-maven-plugin.npm.testSkip=true" "-Dfrontend-maven-plugin.npm.prune=true"
+          "-Dfrontend-maven-plugin.npm.install.onlyProduction=true" "-Dfrontend-maven-plugin.npm.coverageSkip=true"
+          "-Dfrontend-maven-plugin.npm.resources.skip=true" "-Dfrontend-maven-plugin.npm.outputDirectory=/tmp"
+          "-Dfrontend-maven-plugin.npm.skip=true" "-Dfrontend-maven-plugin.skip=true"
+          "-Dfrontend-maven-plugin.protractor.skip=true" "-Dfrontend-maven-plugin.npm.install.only=production"
+          "-Dfrontend-maven-plugin.useYarn=false" "-Dfrontend-maven-plugin.npm.test.skip=true"
+          "-Dfrontend-maven-plugin.npm.cache.skip=true" "-Dfrontend-maven-plugin.generate-sources.skip=true"
+          "-Dfrontend-maven-plugin.npm.generate-sources.skip=true" "-Dfrontend-maven-plugin.npm.local.skip=true"
+          "-Dfrontend-maven-plugin.frontend-maven-plugin.npm.install.skip=true" "-Dfrontend-maven-plugin.protractor.download.skip=true"
+          "-Dwebdriver.driver=null" "-Dfrontend-maven-plugin.npm.install.locales=en"
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/example" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/example,@ant-design/icons-angular"
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/example,@ant-design/icons-angular,less"
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/example,@ant-design/icons-angular,less,date-fns/locale/da"
+          "-Dfrontend-maven-plugin.npm.install.ignore=resolve/example,@ant-design/icons-angular,less,date-fns/locale/da,rxjs/observable"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular" "-Dfrontend-maven-plugin.npm.install.skipBundles=true"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set"
+          "-Dfrontend-maven-plugin.npm.install.devDependencies=false" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript,core-js"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript,core-js,@angular/common/upgrade"
+          "-Dfrontend-maven-plugin.npm.install.include=@angular/common" "-Dfrontend-maven-plugin.npm.install.optional=true"
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript,core-js,@angular/common/upgrade,@antv/g2"
+          "-Dfrontend-maven-plugin.npm.install.production=true" "-Dfrontend-maven-plugin.npm.install.depth=0"
+          "-Dfrontend-maven-plugin.npm.install.bundle=false" "-Dfrontend-maven-plugin.npm.install.noOptional=true"
+          "-Dfrontend-maven-plugin.npm.install.exclude=@antv/data-set" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript,core-js,@angular/common/upgrade,@antv/g2,zone.js"
+          "-Dfrontend-maven-plugin.npm.install.no-package-lock=true" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript,core-js,@angular/common/upgrade,@antv/g2,zone.js,iconv-lite"
+          "-Dfrontend-maven-plugin.npm.install.ignore-scripts=true" 
+          "-Dfrontend-maven-plugin.npm.install.ignore=@ant-design/icons-angular,@antv/data-set,@angular/cdk/accordion,date-fns/locale/eo,typescript,core-js,@angular/common/upgrade,@antv/g2,zone.js,iconv-lite,ng-zorro-antd"
+          "-Dfrontend-maven-plugin.npm.install.prefix=.npm-install" "-Dfrontend-maven-plugin.npm.install.only="@angular/common""
+          "-Dfrontend-maven-plugin.npm.install.targetDirectory=target/npm-install"
+          "-Dfrontend-maven-plugin.npm.install.no-bundle=true" "-Dfrontend-maven-plugin.npm.install.exclude=@antv/data-set,@antv/g2"
+          "-Dfrontend-maven-plugin.npm.install.no-optional=true" "-Dfrontend-maven-plugin.npm.install.ignore=date-fns/locale/cs"
     name: run-tests-in-zeppelin-web-angular
   test-selenium-with-spark-module-for-spark-3-4:
     runs-on: ubuntu-20.04
@@ -80,48 +181,62 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Tune Runner VM
-      uses: ./.github/actions/tune-runner-vm
-    - name: Set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 11
-    - name: Cache local Maven repository
-      uses: actions/cache@v4
-      with:
-        path: |-
-          ~/.m2/repository
-          !~/.m2/repository/org/apache/zeppelin/
-          ~/.spark-dist
-          ~/.cache
-        key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |-
-          ${{ runner.os }}-zeppelin-
-    - name: Setup conda environment with python 3.9 and R
-      uses: conda-incubator/setup-miniconda@v3
-      with:
-        activate-environment: python_3_with_R
-        environment-file: testing/env_python_3_with_R.yml
-        python-version: 3.9
-        channels: conda-forge,defaults
-        channel-priority: true
-        auto-activate-base: false
-        use-mamba: true
-    - name: Make IRkernel available to Jupyter
-      run: |-
-        R -e "IRkernel::installspec()"
-    - name: Install Environment
-      run: |-
-        ./mvnw clean install -DskipTests -am -pl zeppelin-integration -Pweb-classic -Pintegration -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist ${MAVEN_ARGS}
-    - name: run tests
-      run: |-
-        xvfb-run --auto-servernum --server-args="-screen 0 1600x1024x16" ./mvnw verify -DfailIfNoTests=false -pl zeppelin-integration -Pweb-classic -Pintegration -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist -Pusing-source-tree ${MAVEN_ARGS}
-    - name: Print zeppelin logs
-      run: if [ -d "logs" ]; then cat logs/*; fi
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
+        with:
+          path: |-
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |-
+            ${{ runner.os }}-zeppelin-
+      - name: Setup conda environment with python 3.9 and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_3_with_R.yml
+          python-version: 3.9
+          channels: conda-forge,defaults
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: |-
+          R -e "IRkernel::installspec()"
+      - name: Install Environment
+        run: "./mvnw clean install -DskipTests -am -pl zeppelin-integration -Pweb-classic
+          -Pintegration -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist ${MAVEN_ARGS}\n
+          \"-Dfrontend-maven-plugin.node.args=-ignore-scripts\" \"--no-transfer-progress\"\
+          \ \"-DskipTests=false\" \"-Dnpm.skip.example=true\" \"-Ddownload-maven-plugin.skip=true\"\
+          \ \"-Dfrontend-maven-plugin.skip.npm=true\" \"-Dfrontend-maven-plugin.skip=true\"\
+          \ \"-Dmathjax.skip=true\" \"-Dfrontend-maven-plugin.skipTests=true\" \"\
+          -Dscrollmonitor.skip=true\" \"-Dwebpack.skip=true\" \"-Dfrontend-maven-plugin.skipNpmInstall=true\"\
+          \ \"-Dstring-replace-webpack-plugin.skip=true\" \"-Dfrontend-maven-plugin.skipNpm=true\"\
+          \ \"-Dfrontend-maven-plugin.use.npm=false\" \"-Dfrontend-maven-plugin.install.skip=true\"\
+          \ \"-Dfrontend-maven-plugin.npm.skip=true\" \"-Dexcel-builder.skip=true\"\
+          \ \"-Dfrontend-maven-plugin.generate-sources=false\" \"-Dangular-ui-grid.skip=true\"\
+          \ \"-Dbootstrap.skip=true\" \"-Dfrontend-maven-plugin.npm.install.skip=true\"\
+          \ \"-Dfrontend-maven-plugin.run.skip=true\" \"-Dunique-filename.skip=true\"\
+          \ \"-Dtext-table.skip=true\" \"-Dregenerator-transform.skip=true\" \"-Dfrontend-maven-plugin.installDirectory=/dev/null\"\
+          \ \"-Ddownload-sparkr-files.skip=true\" \"-Dng-sortable.skip=true\" \"-Dcaniuse-db.skip=true\"\
+          \ \"-Dfrontend-maven-plugin.goals=\""
+      - name: run tests
+        run: |-
+          xvfb-run --auto-servernum --server-args="-screen 0 1600x1024x16" ./mvnw verify -DfailIfNoTests=false -pl zeppelin-integration -Pweb-classic -Pintegration -Pspark-scala-2.12 -Pspark-3.4 -Pweb-dist -Pusing-source-tree ${MAVEN_ARGS}
+      - name: Print zeppelin logs
+        run: if [ -d "logs" ]; then cat logs/*; fi
     name: test-selenium-with-spark-module-for-spark-3-4
 'on':
-- push
-- workflow_dispatch
+  - push
+  - workflow_dispatch
